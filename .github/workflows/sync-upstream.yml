@@ -1,0 +1,31 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    # Runs every Monday at ~9:07 AM UTC (off-minute to avoid load spikes)
+    - cron: '7 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Sync with upstream
+        run: |
+          git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
+          git fetch upstream
+
+          for branch in dev master; do
+            git checkout $branch
+            git merge upstream/$branch --no-edit
+            git push origin $branch
+          done
